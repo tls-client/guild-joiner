@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Guild Joiner</title>
+  <style>
+    body { background: #222; color: #fff; font-family: sans-serif; margin: 0; }
+    .container { max-width: 400px; margin: 40px auto; background: #333; padding: 24px; border-radius: 12px; }
+    label { display: block; margin-top: 16px; font-size: 14px; }
+    input, textarea { width: 100%; padding: 8px; border-radius: 6px; border: none; margin-top: 6px; background: #222; color: #fff; }
+    button { margin-top: 20px; padding: 12px 24px; border-radius: 8px; border: none; background: #5865f2; color: #fff; font-weight: bold; cursor: pointer; }
+    .log { margin-top: 16px; height: 100px; background: #222; border-radius: 8px; padding: 8px; font-size: 12px; overflow-y: auto; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Guild Joiner</h2>
+    <form id="joinForm">
+      <label for="tokens">Token</label>
+      <textarea id="tokens" rows="3" placeholder="改行orカンマで複数可"></textarea>
+      <label for="invite">招待コード</label>
+      <input type="text" id="invite" placeholder="discord.gg/">
+      <label for="nickname">サーバーニックネーム</label>
+      <input type="text" id="nickname" placeholder="サーバーでの表示名">
+      <label for="bio">自己紹介</label>
+      <textarea id="bio" rows="2" placeholder="自己紹介文"></textarea>
+      <button type="button" id="startJoin">参加開始</button>
+      <div class="log" id="log"></div>
+    </form>
+  </div>
+  <script>
+    document.getElementById("startJoin").onclick = function() {
+      const log = document.getElementById("log");
+      log.textContent = "";
+      const tokens = document.getElementById("tokens").value.split(",").map(x => x.trim()).filter(x => x);
+      const invite = document.getElementById("invite").value.trim();
+      const nickname = document.getElementById("nickname").value.trim();
+      const bio = document.getElementById("bio").value.trim();
+      for (const token of tokens) {
+        log.textContent += `トークン: ${token} 実行中
+`;
+        log.textContent += `サーバー参加完了（エミュレート）
+`;
+        if (nickname) log.textContent += `ニックネーム変更: ${nickname}
+`;
+        if (bio) log.textContent += `Bio更新: ${bio}
+`;
+      }
+      log.textContent += `全処理終了。
+`;
+    };
+  </script>
+</body>
+</html>
