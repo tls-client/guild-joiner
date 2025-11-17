@@ -2,138 +2,156 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>Guild Join/Leave</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<link href="https://fonts.googleapis.com/css2?family=Whitney:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<title>Guild Joiner - Leaver</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
-  :root {
-    --bg: #191919;
-    --sidebar: #202225;
-    --main: #36393f;
-    --hover: #32353b;
-    --accent: #5865f2;
-    --text: #dcddde;
-    --text-muted: #8e9297;
-    --success: #43b581;
-    --danger: #f04747;
-  }
+  ::-webkit-scrollbar { width: 8px; }
+  ::-webkit-scrollbar-track { background: #11131a; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb { background: #64d6ff; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #80e8ff; }
+
   * { margin:0; padding:0; box-sizing:border-box; }
-  body { 
-    font-family: 'Whitney', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-    background: var(--bg); 
-    color: var(--text);
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+  body {
+    font-family: 'Inter', sans-serif;
+    background: radial-gradient(ellipse at 60% 30%, #23253b 0%, #1a1b20 35%, #101018 100%);
+    color: #e1e3e8;
+    margin:0; padding:0;
+    display:flex; justify-content:center; align-items:center;
+    height:100vh;
+    overflow:hidden;
   }
-  .container {
-    width: 480px;
-    height: 720px;
-    background: var(--main);
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.7);
-    display: flex;
-    flex-direction: column;
+  .card {
+    background: #20222b;
+    padding: 36px;
+    border-radius: 24px;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.7), 0 0 40px rgba(100,214,255,0.15);
+    width: 100%; max-width: 620px;
+    animation: glowFade 1s ease-out;
+    border: 1px solid rgba(100,214,255,0.2);
   }
-  header {
-    background: #2f3136;
-    padding: 16px;
+  @keyframes glowFade {
+    from { opacity:0; transform:translateY(30px) scale(0.95); }
+    to   { opacity:1; transform:translateY(0) scale(1); }
+  }
+  h2 {
+    color: #64d6ff;
     text-align: center;
-    font-size: 18px;
-    font-weight: 600;
-    border-bottom: 1px solid #202225;
+    margin: 0 0 32px;
+    font-weight: 700;
+    font-size: 30px;
+    text-shadow: 0 0 20px rgba(100,214,255,0.6);
+    letter-spacing: 1px;
   }
-  .content { flex: 1; padding: 20px; overflow-y: auto; }
-  .input-group { margin-bottom: 16px; }
-  label { font-size: 12px; font-weight: 600; color: #b9bbbe; text-transform: uppercase; letter-spacing: 0.5px; }
-  textarea, input[type=text], input[type=number] {
-    width: 100%;
-    background: #2f3136;
-    border: none;
-    border-radius: 6px;
-    padding: 10px 12px;
-    margin-top: 6px;
-    color: #dcddde;
-    font-family: inherit;
+  label {
+    display: block;
+    margin-top: 20px;
     font-size: 14px;
+    font-weight: 600;
+    color: #64d6ff;
   }
-  textarea { resize: vertical; min-height: 80px; }
-  button {
+  input[type="text"], textarea, input[type="number"] {
     width: 100%;
     padding: 12px;
-    margin-top: 12px;
+    margin-top: 8px;
+    border-radius: 10px;
     border: none;
-    border-radius: 6px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: all 0.2s;
+    background: #15161b;
+    color: #fff;
+    font-family: 'Courier New', monospace;
+    font-size: 14px;
+    transition: all 0.3s;
+    box-shadow: inset 0 2px 8px rgba(0,0,0,0.4);
   }
-  #startBtn { background: var(--accent); color: white; }
-  #startBtn:hover { background: #4752c4; }
-  #stopBtn { background: var(--danger); color: white; display: none; }
-  #stopBtn:hover { background: #da3b3b; }
+  input:focus, textarea:focus {
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(100,214,255,0.5), inset 0 2px 8px rgba(0,0,0,0.4);
+  }
+  textarea { resize: vertical; min-height: 90px; }
+
+  button.primary {
+    margin-top: 28px;
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 16px;
+    background: linear-gradient(135deg, #64d6ff, #23253b);
+    color: #15161b;
+    font-weight: 700;
+    font-size: 19px;
+    letter-spacing: 1px;
+    cursor: pointer;
+    box-shadow: 0 8px 25px rgba(100,214,255,0.4), 0 0 20px rgba(100,214,255,0.3);
+    transition: all 0.4s;
+    position: relative;
+    overflow: hidden;
+  }
+  button.primary:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 15px 35px rgba(100,214,255,0.6);
+  }
+  button.primary:active { transform: translateY(1px); }
+
+  button.stop {
+    background: linear-gradient(135deg, #f04747, #8b1a1a);
+    margin-top: 12px;
+    display: none;
+  }
+  button.stop:hover { box-shadow: 0 15px 35px rgba(240,71,71,0.6); }
+
   .status {
     text-align: center;
-    padding: 12px;
+    margin: 20px 0;
+    padding: 14px;
+    background: rgba(100,214,255,0.1);
+    border-radius: 12px;
     font-weight: 600;
-    margin: 12px 0;
-    border-radius: 6px;
-    background: #2f3136;
+    color: #64d6ff;
+    text-shadow: 0 0 10px rgba(100,214,255,0.5);
   }
-  .log {
-    background: #2f3136;
-    border-radius: 6px;
-    padding: 12px;
+
+  #log {
+    margin-top: 24px;
+    padding: 16px;
     height: 200px;
     overflow-y: auto;
-    font-family: Consolas, monospace;
+    background: #15161b;
+    border-radius: 12px;
+    font-family: 'Courier New', monospace;
     font-size: 13px;
-    line-height: 1.5;
-    margin-top: 12px;
+    line-height: 1.6;
+    border: 1px solid rgba(100,214,255,0.2);
+    box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
   }
-  .log .success { color: var(--success); }
-  .log .error { color: var(--danger); }
-  .log .info { color: #00b0f4; }
+  .success { color: #64d6ff; }
+  .error   { color: #ff6b6b; }
+  .info    { color: #a0d8ff; }
 </style>
 </head>
 <body>
-<div class="container">
-  <header>Guild Join/Leave</header>
-  <div class="content">
-    <div class="status" id="status">待機中 — 自分のサーバーのみ使用可</div>
+<div class="card">
+  <h2>Guild Joiner - Leaver</h2>
+  <div class="status" id="status">待機中 — 自分のサーバーでの研究・テスト専用</div>
 
-    <div class="input-group">
-      <label>トークン（改行で複数可）</label>
-      <textarea id="tokens" placeholder="トークンを貼り付けてください"></textarea>
-    </div>
+  <label>トークン（改行で複数可）</label>
+  <textarea id="tokens" placeholder="tokenを貼り付けてください"></textarea>
 
-    <div class="input-group">
-      <label>招待コード</label>
-      <input type="text" id="invite" placeholder="sampleもしくはdiscord.gg/sample">
-    </div>
+  <label>招待コード</label>
+  <input type="text" id="invite" placeholder="abc123 または discord.gg/abc123">
 
-    <div class="input-group">
-      <label>ニックネーム（任意）</label>
-      <input type="text" id="nickname" placeholder="参加時に設定してください">
-    </div>
+  <label>ニックネーム（任意）</label>
+  <input type="text" id="nickname" placeholder="例：テストユーザー">
 
-    <div class="input-group">
-      <label>自己紹介（任意）</label>
-      <textarea id="bio" rows="2" placeholder="参加時に設定してください"></textarea>
-    </div>
+  <label>自己紹介（任意）</label>
+  <textarea id="bio" rows="2" placeholder="例：負荷テスト用アカウントです"></textarea>
 
-    <div class="input-group">
-      <label>遅延（ms）</label>
-      <input type="number" id="delay" value="5000" min="2000">
-    </div>
+  <label>遅延（ms）</label>
+  <input type="number" id="delay" value="8000" min="3000">
 
-    <button id="startBtn">参加開始</button>
-    <button id="stopBtn">全員退出</button>
+  <button class="primary" id="startBtn">参加開始</button>
+  <button class="primary stop" id="stopBtn">全員退出</button>
 
-    <div class="log" id="log">ログがここに表示されます...</div>
-  </div>
+  <div id="log">ログがここに表示されます...</div>
 </div>
 
 <script>
@@ -148,43 +166,39 @@ function log(msg, type = 'info') {
   logEl.scrollTop = logEl.scrollHeight;
 }
 
-async function safeFetch(url, options) {
-  try {
-    const res = await fetch(url, {
-      ...options,
-      headers: {
-        ...options.headers,
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-        "X-Super-Properties": btoa(JSON.stringify({os:"Windows",browser:"Chrome",device:"",system_locale:"ja-JP",browser_user_agent:navigator.userAgent}))
-      }
-    });
-    return res;
-  } catch (e) { log(`ネットワークエラー: ${e.message}`, 'error'); }
-}
-
 async function join(token, invite, nick, bio) {
   try {
-    const code = invite.split('/').pop();
-    const res = await safeFetch(`https://discord.com/api/v9/invites/${code}`, {
+    const code = invite.trim().split('/').pop();
+    const res = await fetch(`https://discord.com/api/v9/invites/${code}`, {
       method: "POST",
-      headers: { Authorization: token, "Content-Type": "application/json" },
+      headers: {
+        "Authorization": token.trim(),
+        "Content-Type": "application/json",
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/130.0.0.0 Safari/537.36",
+        "X-Super-Properties": btoa(JSON.stringify({os:"Windows",browser:"Chrome",device:"",system_locale:"ja-JP"}))
+      },
       body: "{}"
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(`HTTP ${res.status} - ${err.substring(0,100)}`);
+    }
+
     const data = await res.json();
-    log(`参加成功 → ${data.guild.name}`, 'success');
+    log(`参加成功 → ${data.guild.name} (${data.guild.id})`, 'success');
 
     if (nick) {
-      await safeFetch(`https://discord.com/api/v9/guilds/${data.guild.id}/members/@me`, {
+      await fetch(`https://discord.com/api/v9/guilds/${data.guild.id}/members/@me`, {
         method: "PATCH",
-        headers: { Authorization: token, "Content-Type": "application/json" },
+        headers: { "Authorization": token.trim(), "Content-Type": "application/json" },
         body: JSON.stringify({ nick })
       });
     }
     if (bio) {
-      await safeFetch("https://discord.com/api/v9/users/@me/settings", {
+      await fetch("https://discord.com/api/v9/users/@me/settings", {
         method: "PATCH",
-        headers: { Authorization: token, "Content-Type": "application/json" },
+        headers: { "Authorization": token.trim(), "Content-Type": "application/json" },
         body: JSON.stringify({ bio })
       });
     }
@@ -197,12 +211,14 @@ async function join(token, invite, nick, bio) {
 
 async function leave(token, guildId) {
   try {
-    await safeFetch(`https://discord.com/api/v9/users/@me/guilds/${guildId}`, {
+    await fetch(`https://discord.com/api/v9/users/@me/guilds/${guildId}`, {
       method: "DELETE",
-      headers: { Authorization: token }
+      headers: { "Authorization": token.trim() }
     });
     log(`退出完了`, 'info');
-  } catch (e) { log(`退出失敗: ${e.message}`, 'error'); }
+  } catch (e) {
+    log(`退出失敗: ${e.message}`, 'error');
+  }
 }
 
 document.getElementById('startBtn').onclick = async () => {
@@ -210,36 +226,20 @@ document.getElementById('startBtn').onclick = async () => {
   running = true;
   document.getElementById('startBtn').style.display = 'none';
   document.getElementById('stopBtn').style.display = 'block';
-  statusEl.textContent = "参加中...";
+  statusEl.textContent = "参加処理中...";
 
   const tokens = document.getElementById('tokens').value.trim().split('\n').filter(t => t.trim());
   const invite = document.getElementById('invite').value.trim();
   const nick = document.getElementById('nickname').value.trim() || null;
   const bio = document.getElementById('bio').value.trim() || null;
-  const delay = parseInt(document.getElementById('delay').value);
+  const delay = parseInt(document.getElementById('delay').value) || 8000;
 
   workers = [];
 
   for (const token of tokens) {
     if (!running) break;
-    const gid = await join(token.trim(), invite, nick, bio);
+    const gid = await join(token, invite, nick, bio);
     if (gid) workers.push({ token: token.trim(), guildId: gid });
-    await new Promise(r => setTimeout(r, delay + Math.random() * 2000)); // ランダム遅延で検知回避
+    await new Promise(r => setTimeout(r, delay + Math.random() * 3000)); // ランダム遅延で検知回避
   }
-  statusEl.textContent = `${workers.length}アカウントが参加完了`;
-};
-
-document.getElementById('stopBtn').onclick = async () => {
-  running = false;
-  document.getElementById('stopBtn').style.display = 'none';
-  document.getElementById('startBtn').style.display = 'block';
-  statusEl.textContent = "退出中...";
-  for (const w of workers) {
-    await leave(w.token, w.guildId);
-  }
-  workers = [];
-  statusEl.textContent = "待機中";
-};
-</script>
-</body>
-</html>
+  statusEl.text
