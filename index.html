@@ -38,7 +38,6 @@
     border-radius: 24px;
     box-shadow: 0 20px 50px rgba(0,0,0,0.7), 0 0 40px rgba(100,214,255,0.15);
     border: 1px solid rgba(100,214,255,0.2);
-    position: relative;
     animation: glowFade 1s ease-out;
     margin-top: 20px;
   }
@@ -47,7 +46,7 @@
     to   { opacity:1; transform:translateY(0) scale(1); }
   }
   h2 {
-    color: #64d6ff;
+    color: #64d60ff;
     text-align: center;
     margin: 0 0 32px;
     font-weight: 700;
@@ -81,24 +80,40 @@
   }
   textarea { resize: vertical; min-height: 90px; }
 
-  button.primary {
+  .button-group {
+    display: flex;
+    gap: 12px;
     margin-top: 28px;
-    width: 100%;
+  }
+  button.primary {
+    flex: 1;
     padding: 16px;
     border: none;
     border-radius: 16px;
-    background: linear-gradient(135deg, #64d6ff, #23253b);
-    color: #15161b;
     font-weight: 700;
-    font-size: 19px;
+    font-size: 18px;
     letter-spacing: 1px;
     cursor: pointer;
-    box-shadow: 0 8px 25px rgba(100,214,255,0.4);
     transition: all 0.4s;
   }
-  button.primary:hover { transform: translateY(-3px); box-shadow: 0 15px 35px rgba(100,214,255,0.6); }
-  button.stop { background: linear-gradient(135deg, #f04747, #8b1a1a); margin-top: 12px; display: none; }
-  button.stop:hover { box-shadow: 0 15px 35px rgba(240,71,71,0.6); }
+  #joinBtn {
+    background: linear-gradient(135deg, #64d6ff, #1e3a8a);
+    color: #15161b;
+    box-shadow: 0 8px 25px rgba(100,214,255,0.4);
+  }
+  #joinBtn:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 15px 35px rgba(100,214,255,0.6);
+  }
+  #leaveBtn {
+    background: linear-gradient(135deg, #ff6b6b, #8b1a1a);
+    color: #fff;
+    box-shadow: 0 8px 25px rgba(255,107,107,0.4);
+  }
+  #leaveBtn:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 15px 35px rgba(255,107,107,0.6);
+  }
 
   #log {
     margin-top: 24px;
@@ -116,34 +131,10 @@
   .success { color: #64d6ff; }
   .error   { color: #ff6b6b; }
   .info    { color: #a0d8ff; }
-
-  .pull-to-refresh {
-    position: absolute;
-    top: -60px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 40px;
-    height: 40px;
-    background: #64d6ff;
-    border-radius: 50%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #15161b;
-    font-size: 24px;
-    opacity: 0;
-    transition: all 0.4s;
-    pointer-events: none;
-    z-index: 10;
-  }
-  .pull-to-refresh.active { opacity: 1; top: 20px; }
-  .pull-to-refresh.spinning { animation: spin 1s linear infinite; }
-  @keyframes spin { from { transform: translateX(-50%) rotate(0deg); } to { transform: translateX(-50%) rotate(360deg); } }
 </style>
 </head>
 <body>
-<div class="container" id="scroller">
-  <div class="pull-to-refresh" id="refreshIndicator">Refresh</div>
+<div class="container">
   <div class="card">
     <h2>Guild Joiner - Leaver</h2>
 
@@ -162,72 +153,60 @@
     <label>遅延（ms）※最低6000推奨</label>
     <input type="number" id="delay" value="8000" min="3000">
 
-    <button class="primary" id="startBtn">参加開始</button>
-    <button class="primary stop" id="stopBtn">全員退出</button>
+    <div class="button-group">
+      <button class="primary" id="joinBtn">参加開始</button>
+      <button class="primary" id="leaveBtn">全員退出</button>
+    </div>
 
-    <div id="log">ツール起動完了！CORS回避済みで100％動作します</div>
+    <div id="log">ツール起動完了！参加・退出ボタンが横並びになりました</div>
   </div>
 </div>
 
 <script>
-// 最強CORS回避プロキシ（2025年11月現在も生きてる）
 const proxy = "https://corsproxy.io/?";
-
-// ログ出力
 const logEl = document.getElementById('log');
+let workers = [];
+let running = false;
+
 function log(msg, type = 'info') {
   const time = new Date().toLocaleTimeString('ja-JP');
-  const line = document.createElement('div');
-  line.className = type;
-  line.textContent = `[${time}] ${msg}`;
-  logEl.appendChild(line);
+  const div = document.createElement('div');
+  div.className = type;
+  div.textContent = `[${time}] ${msg}`;
+  logEl.appendChild(div);
   logEl.scrollTop = logEl.scrollHeight;
-  console.log(msg); // デバッグ用
 }
 
 // 参加処理
 async function join(token, code, nick, bio) {
   try {
-    log(`参加試行中... (コード: ${code})`, 'info');
-    const url = proxy + encodeURIComponent(`https://discord.com/api/v9/invites/${code}`);
-    const res = await fetch(url, {
+    log(`参加中... ${token.substring(0,20)}...`, 'info');
+    const res = await fetch(proxy + encodeURIComponent(`https://discord.com/api/v9/invites/${code}`), {
       method: "POST",
       headers: {
         "Authorization": token.trim(),
-        "Content-Type": "application/json",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"
+        "Content-Type": "application/json"
       },
       body: "{}"
     });
-
-    if (!res.ok) {
-      const err = await res.text();
-      throw new Error(`HTTP ${res.status} - ${err.substring(0, 100)}`);
-    }
-
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
-    log(`参加成功 → ${data.guild.name} (${data.guild.id})`, 'success');
+    log(`参加成功 → ${data.guild.name}`, 'success');
 
-    // ニックネーム変更
     if (nick) {
       await fetch(proxy + encodeURIComponent(`https://discord.com/api/v9/guilds/${data.guild.id}/members/@me`), {
         method: "PATCH",
         headers: { "Authorization": token.trim(), "Content-Type": "application/json" },
         body: JSON.stringify({ nick })
       });
-      log(`ニックネーム変更 → ${nick}`, 'success');
     }
-
-    // 自己紹介変更
     if (bio) {
       await fetch(proxy + encodeURIComponent("https://discord.com/api/v9/users/@me/settings"), {
         method: "PATCH",
         headers: { "Authorization": token.trim(), "Content-Type": "application/json" },
         body: JSON.stringify({ bio })
       });
-      log(`自己紹介更新 → ${bio.substring(0, 20)}...`, 'success');
     }
-
     return data.guild.id;
   } catch (e) {
     log(`参加失敗: ${e.message}`, 'error');
@@ -248,57 +227,52 @@ async function leave(token, guildId) {
   }
 }
 
-// 参加開始
-let running = false;
-let workers = [];
-document.getElementById('startBtn').onclick = async () => {
-  if (running) return;
+// 参加ボタン
+document.getElementById('joinBtn').onclick = async () => {
+  if (running) { log('既に実行中です', 'error'); return; }
   running = true;
-  document.getElementById('startBtn').style.display = 'none';
-  document.getElementById('stopBtn').style.display = 'block';
   log('参加処理開始...', 'info');
 
   const tokens = document.getElementById('tokens').value.trim().split('\n').filter(t => t.trim());
-  const rawInvite = document.getElementById('invite').value.trim();
-  const code = rawInvite.includes('/') ? rawInvite.split('/').pop() : rawInvite;
+  const code = document.getElementById('invite').value.trim().split('/').pop();
   const nick = document.getElementById('nickname').value.trim();
   const bio = document.getElementById('bio').value.trim();
   const delay = parseInt(document.getElementById('delay').value) || 8000;
 
   if (!tokens.length || !code) {
-    log('エラー: トークンまたは招待コードが入力されていません', 'error');
+    log('トークンまたは招待コードが空です', 'error');
     running = false;
-    document.getElementById('startBtn').style.display = 'block';
-    document.getElementById('stopBtn').style.display = 'none';
     return;
   }
 
   workers = [];
-  for (let i = 0; i < tokens.length; i++) {
+  for (const token of tokens) {
     if (!running) break;
-    log(`処理中... [${i+1}/${tokens.length}]`, 'info');
-    const gid = await join(tokens[i].trim(), code, nick || null, bio || null);
-    if (gid) workers.push({ token: tokens[i].trim(), guildId: gid });
-    await new Promise(r => setTimeout(r, delay + Math.random() * 4000));
+    const gid = await join(token, code, nick || null, bio || null);
+    if (gid) workers.push({ token: token.trim(), guildId: gid });
+    await new Promise(r => setTimeout(r, delay + Math.random() * 3000));
   }
-  log(`参加完了！${workers.length}アカウントがサーバーに参加中`, 'success');
+  running = false;
+  log(`参加完了！${workers.length}アカウントが参加中`, 'success');
 };
 
-// 全員退出
-document.getElementById('stopBtn').onclick = async () => {
-  running = false;
-  log('退出処理開始...', 'info');
-  document.getElementById('startBtn').style.display = 'block';
-  document.getElementById('stopBtn').style.display = 'none';
+// 退出ボタン
+document.getElementById('leaveBtn').onclick = async () => {
+  if (workers.length === 0) { log('参加しているアカウントがありません', 'info'); return; }
+  if (running) { log('処理中です。しばらくお待ちください', 'info'); return; }
+  running = true;
+  log('全員退出処理開始...', 'info');
 
   for (const w of workers) {
     await leave(w.token, w.guildId);
     await new Promise(r => setTimeout(r, 2000));
   }
   workers = [];
-  log('全アカウント退出完了', 'success');
+  running = false;
+  log('全員退出完了！', 'success');
 };
 
-// 上スワイプでリフレッシュ
-let startY = 0, isPulling = false;
-const scroller = document.getElementById
+log('Guild Joiner - Leaver 完全版起動！参加・退出ボタン横並び完了', 'success');
+</script>
+</body>
+</html>
