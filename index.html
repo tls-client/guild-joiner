@@ -2,7 +2,7 @@
 <html lang="ja">
 <head>
 <meta charset="UTF-8">
-<title>Guild Joiner - Leaver</title>
+<title>VC Joiner</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
@@ -11,14 +11,13 @@
   ::-webkit-scrollbar-thumb { background: #64d6ff; border-radius: 4px; }
   ::-webkit-scrollbar-thumb:hover { background: #80e8ff; }
 
-  * { margin:0; padding:0; box-sizing:border-box; touch-action: pan-y; }
+  * { margin:0; padding:0; box-sizing:border-box; }
   body {
     font-family: 'Inter', sans-serif;
     background: radial-gradient(ellipse at 60% 30%, #23253b 0%, #1a1b20 35%, #101018 100%);
     color: #e1e3e8;
-    margin:0; padding:0; padding-top: env(safe-area-inset-top, 20px);
-    height: 100dvh;
-    overflow: hidden;
+    min-height: 100dvh;
+    padding: 20px;
     display: flex;
     justify-content: center;
     align-items: flex-start;
@@ -26,11 +25,6 @@
   .container {
     width: 100%;
     max-width: 620px;
-    padding: 20px;
-    padding-bottom: env(safe-area-inset-bottom, 30px);
-    height: 100dvh;
-    overflow-y: auto;
-    -webkit-overflow-scrolling: touch;
   }
   .card {
     background: #20222b;
@@ -45,15 +39,17 @@
     from { opacity:0; transform:translateY(30px) scale(0.95); }
     to   { opacity:1; transform:translateY(0) scale(1); }
   }
+
   h2 {
     color: #64d6ff;
     text-align: center;
     margin: 0 0 32px;
     font-weight: 700;
-    font-size: 30px;
+    font-size: 32px;
     text-shadow: 0 0 20px rgba(100,214,255,0.6);
-    letter-spacing: 1px;
+    letter-spacing: 1.5px;
   }
+
   label {
     display: block;
     margin-top: 20px;
@@ -61,7 +57,7 @@
     font-weight: 600;
     color: #64d6ff;
   }
-  input[type="text"], textarea, input[type="number"] {
+  input[type="text"] {
     width: 100%;
     padding: 12px;
     margin-top: 8px;
@@ -74,11 +70,75 @@
     transition: all 0.3s;
     box-shadow: inset 0 2px 8px rgba(0,0,0,0.4);
   }
-  input:focus, textarea:focus {
+  input:focus {
     outline: none;
     box-shadow: 0 0 0 3px rgba(100,214,255,0.5), inset 0 2px 8px rgba(0,0,0,0.4);
   }
-  textarea { resize: vertical; min-height: 90px; }
+
+  .token-list {
+    margin-top: 16px;
+    max-height: 180px;
+    overflow-y: auto;
+    background: #15161b;
+    border-radius: 12px;
+    padding: 10px;
+    border: 1px solid rgba(100,214,255,0.2);
+  }
+  .token-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 12px;
+    background: rgba(100,214,255,0.05);
+    border-radius: 8px;
+    margin-bottom: 6px;
+    font-family: 'Courier New', monospace;
+    font-size: 13px;
+  }
+  .token-item button {
+    background: #ff6b6b;
+    color: white;
+    border: none;
+    padding: 4px 10px;
+    border-radius: 6px;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  .toggle-group {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 16px;
+    margin: 28px 0;
+  }
+  .toggle {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 15px;
+    color: #e1e3e8;
+  }
+  .switch {
+    position: relative;
+    width: 52px;
+    height: 28px;
+    background: #333;
+    border-radius: 50px;
+    cursor: pointer;
+    transition: 0.3s;
+  }
+  .switch input { opacity: 0; width: 0; height: 0; }
+  .slider {
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 22px; height: 22px;
+    background: #fff;
+    border-radius: 50%;
+    transition: 0.3s;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  }
+  input:checked + .switch { background: #64d6ff; }
+  input:checked + .switch .slider { transform: translateX(24px); }
 
   .button-group {
     display: flex;
@@ -109,196 +169,200 @@
   }
   #leaveBtn:hover { transform: translateY(-4px); box-shadow: 0 15px 35px rgba(255,107,107,0.6); }
 
-  #log {
-    margin-top: 24px;
-    padding: 16px;
-    height: 200px;
-    overflow-y: auto;
-    background: #15161b;
+  .btn-small {
+    padding: 10px 16px;
+    font-size: 14px;
     border-radius: 12px;
-    font-family: 'Courier New', monospace;
-    font-size: 13px;
-    line-height: 1.6;
-    border: 1px solid rgba(100,214,255,0.2);
-    box-shadow: inset 0 0 20px rgba(0,0,0,0.5);
-    color: #666;
+    background: rgba(100,214,255,0.15);
+    color: #64d6ff;
   }
-  .success { color: #64d6ff; font-weight: bold; }
-  .error   { color: #ff6b6b; font-weight: bold; }
-  .info    { color: #a0d8ff; }
+
+  .notification {
+    margin-top: 20px;
+    padding: 16px;
+    border-radius: 12px;
+    text-align: center;
+    font-weight: 600;
+    animation: fade 3s forwards;
+  }
+  .success { background: rgba(100,214,255,0.2); color: #64d6ff; border: 1px solid #64d6ff; }
+  .error   { background: rgba(255,107,107,0.2); color: #ff6b6b; border: 1px solid #ff6b6b; }
+
+  @keyframes fade {
+    0%,100% { opacity:0; transform:translateY(-10px); }
+    15%,85% { opacity:1; transform:translateY(0); }
+  }
 </style>
 </head>
 <body>
 <div class="container">
   <div class="card">
-    <h2>Guild Joiner Leaver</h2>
+    <h2>VC Joiner</h2>
 
-    <label>トークン（改行で複数可）</label>
-    <textarea id="tokens" placeholder="自分のトークンを1行ずつ貼り付け"></textarea>
-
-    <label>招待コード</label>
-    <input type="text" id="invite" placeholder="discord.gg/abc">
-
-    <label>ニックネーム（任意）</label>
-    <input type="text" id="nickname" placeholder="例：User">
-
-    <label>自己紹介（任意）</label>
-    <textarea id="bio" rows="2" placeholder="例：テスト"></textarea>
-
-    <label>遅延（ms）※最低6000推奨</label>
-    <input type="number" id="delay" value="1" min="3000">
-
-    <div class="button-group">
-      <button class="primary" id="joinBtn">参加開始</button>
-      <button class="primary" id="leaveBtn">全員退出</button>
+    <label>トークン</label>
+    <input type="text" id="token" placeholder="トークンを入力">
+    <div class="button-group" style="margin-top:8px; gap:10px;">
+      <button class="primary btn-small" onclick="addToken()">追加</button>
+      <button class="primary btn-small" onclick="document.getElementById('tokenFile').click()">ファイル読み込み</button>
+      <input type="file" id="tokenFile" style="display:none" onchange="uploadTokens(this)">
     </div>
 
-    <div id="log">ログはここに表示されます</div>
+    <div class="token-list" id="tokenList">
+      <div style="text-align:center;opacity:0.5;padding:20px">トークンがありません</div>
+    </div>
+
+    <label>サーバーID (Guild ID)</label>
+    <input type="text" id="guildId" placeholder="例: 123456789012345678">
+
+    <label>ボイスチャンネルID</label>
+    <input type="text" id="vcChannelId" placeholder="例: 987654321098765432">
+
+    <div class="toggle-group">
+      <label class="toggle">
+        <input type="checkbox" id="cameraToggle">
+        <div class="switch"><span class="slider"></span></div>
+        カメラ
+      </label>
+      <label class="toggle">
+        <input type="checkbox" id="micToggle">
+        <div class="switch"><span class="slider"></span></div>
+        マイク
+      </label>
+      <label class="toggle">
+        <input type="checkbox" id="deafenToggle">
+        <div class="switch"><span class="slider"></span></div>
+        聴こえない
+      </label>
+      <label class="toggle">
+        <input type="checkbox" id="streamToggle">
+        <div class="switch"><span class="slider"></span></div>
+        配信
+      </label>
+    </div>
+
+    <div class="button-group">
+      <button class="primary" id="joinBtn" onclick="startRaid()">VCに参加</button>
+      <button class="primary" id="leaveBtn" onclick="stopRaid()">全員退出</button>
+    </div>
+
+    <div id="notification"></div>
   </div>
 </div>
 
 <script>
-const proxy = "https://corsproxy.io/?";
-const logEl = document.getElementById('log');
-let workers = [];
-let isProcessing = false;
+const WS_URL = 'wss://gateway.discord.gg/?v=9&encoding=json';
+let tokens = [], activeJoiners = [];
 
-// ログ出力関数（起動時は一切呼ばない）
-function log(msg, type = 'info') {
-  const time = new Date().toLocaleTimeString('ja-JP', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-  const div = document.createElement('div');
-  div.className = type;
-  div.textContent = `[${time}] ${msg}`;
-  logEl.appendChild(div);
-  logEl.scrollTop = logEl.scrollHeight;
-}
-
-// 参加処理
-async function join(token, code, nick, bio) {
-  try {
-    const res = await fetch(proxy + encodeURIComponent(`https://discord.com/api/v9/invites/${code}`), {
-      method: "POST",
-      headers: {
-        "Authorization": token.trim(),
-        "Content-Type": "application/json",
-        "User-Agent": "Mozilla/5.0"
-      },
-      body: "{}"
+class VCJoiner {
+  constructor(token, guildId, channelId, settings) {
+    this.token = token; this.guildId = guildId; this.channelId = channelId;
+    this.settings = settings; this.ws = null; this.heartbeat = null;
+  }
+  async connect() {
+    return new Promise((resolve, reject) => {
+      this.ws = new WebSocket(WS_URL);
+      this.ws.onmessage = ({data}) => {
+        const p = JSON.parse(data);
+        if (p.op === 10) {
+          this.heartbeat = setInterval(() => this.ws.send(JSON.stringify({op: 1, d: null})), p.d.heartbeat_interval);
+          this.ws.send(JSON.stringify({op: 2, d: {token: this.token, properties: {$os:"Windows",$browser:"Chrome",$device:""}} }));
+          this.ws.send(JSON.stringify({op: 4, d: {
+            guild_id: this.guildId,
+            channel_id: this.channelId,
+            self_mute: !this.settings.mic,
+            self_deaf: this.settings.deafen,
+            self_video: this.settings.camera,
+            self_stream: this.settings.stream || false
+          }}));
+          resolve();
+        }
+      };
+      this.ws.onerror = () => reject();
     });
-
-    if (!res.ok) {
-      const err = await res.text();
-      throw new Error(`HTTP ${res.status}`);
+  }
+  disconnect() {
+    if (this.ws) {
+      this.ws.send(JSON.stringify({op: 4, d: {guild_id: this.guildId, channel_id: null, self_mute: true, self_deaf: false}}));
+      this.ws.close();
     }
-
-    const data = await res.json();
-    log(`参加成功 → ${data.guild.name}`, 'success');
-
-    if (nick) {
-      await fetch(proxy + encodeURIComponent(`https://discord.com/api/v9/guilds/${data.guild.id}/members/@me`), {
-        method: "PATCH",
-        headers: { "Authorization": token.trim(), "Content-Type": "application/json" },
-        body: JSON.stringify({ nick })
-      });
-    }
-    if (bio) {
-      await fetch(proxy + encodeURIComponent("https://discord.com/api/v9/users/@me/settings"), {
-        method: "PATCH",
-        headers: { "Authorization": token.trim(), "Content-Type": "application/json" },
-        body: JSON.stringify({ bio })
-      });
-    }
-    return data.guild.id;
-  } catch (e) {
-    log(`参加失敗: ${e.message}`, 'error');
-    return null;
+    clearInterval(this.heartbeat);
   }
 }
 
-// 退出処理
-async function leave(token, guildId) {
-  try {
-    await fetch(proxy + encodeURIComponent(`https://discord.com/api/v9/users/@me/guilds/${guildId}`), {
-      method: "DELETE",
-      headers: { "Authorization": token.trim() }
-    });
-    log('退出成功', 'success');
-  } catch (e) {
-    log(`退出失敗: ${e.message}`, 'error');
-  }
+function addToken() {
+  const t = document.getElementById("token").value.trim();
+  if (!t || !t.includes(".")) return showNotif("無効なトークンです", "error");
+  if (tokens.includes(t)) return showNotif("すでに追加済み", "error");
+  tokens.push(t); updateList(); document.getElementById("token").value = "";
+  showNotif("トークンを追加しました");
 }
 
-// 参加ボタン
-document.getElementById('joinBtn').onclick = async () => {
-  if (isProcessing) {
-    log('既に処理中です', 'error');
-    return;
-  }
+function uploadTokens(e) {
+  const file = e.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    const added = ev.target.result.split("\n").map(l=>l.trim()).filter(l=>l && l.includes(".") && !tokens.includes(l));
+    tokens.push(...added);
+    updateList();
+    showNotif(`${added.length}個のトークンを追加しました`);
+  };
+  reader.readAsText(file);
+}
 
-  const rawTokens = document.getElementById('tokens').value.trim();
-  const rawInvite = document.getElementById('invite').value.trim();
+function removeToken(t) { tokens = tokens.filter(x => x !== t); updateList(); }
 
-  if (!rawTokens) {
-    log('トークンが入力されていません', 'error');
-    return;
-  }
-  if (!rawInvite) {
-    log('招待コードが入力されていません', 'error');
-    return;
-  }
+function updateList() {
+  document.getElementById("tokenList").innerHTML = tokens.length === 0 
+    ? '<div style="text-align:center;opacity:0.5;padding:20px">トークンがありません</div>'
+    : tokens.map(t => `
+      <div class="token-item">
+        <span>${t.slice(0,10)}...${t.slice(-8)}</span>
+        <button onclick="removeToken('${t}')">削除</button>
+      </div>
+    `).join("");
+}
 
-  const tokens = rawTokens.split('\n').map(t => t.trim()).filter(t => t);
-  const code = rawInvite.split('/').pop();
+function showNotif(msg, type="success") {
+  const n = document.getElementById("notification");
+  n.textContent = msg;
+  n.className = `notification ${type}`;
+}
 
-  if (tokens.length === 0) {
-    log('有効なトークンがありません', 'error');
-    return;
-  }
+function getSettings() {
+  return {
+    camera: document.getElementById("cameraToggle").checked,
+    mic: document.getElementById("micToggle").checked,
+    deafen: document.getElementById("deafenToggle").checked,
+    stream: document.getElementById("streamToggle").checked
+  };
+}
 
-  isProcessing = true;
-  log(`参加処理開始... (${tokens.length}アカウント)`, 'info');
+async function startRaid() {
+  const guild = document.getElementById("guildId").value.trim();
+  const channel = document.getElementById("vcChannelId").value.trim();
+  if (!guild || !channel) return showNotif("サーバーIDかVC IDが空です", "error");
+  if (tokens.length === 0) return showNotif("トークンがありません", "error");
 
-  workers = [];
-  const delay = parseInt(document.getElementById('delay').value) || 8000;
-  const nick = document.getElementById('nickname').value.trim();
-  const bio = document.getElementById('bio').value.trim();
+  document.getElementById("joinBtn").disabled = true;
+  document.getElementById("joinBtn").textContent = "参加中...";
 
   for (const token of tokens) {
-    if (!isProcessing) break;
-    const gid = await join(token, code, nick || null, bio || null);
-    if (gid) workers.push({ token, guildId: gid });
-    await new Promise(r => setTimeout(r, delay + Math.random() * 3000));
+    const j = new VCJoiner(token, guild, channel, getSettings());
+    activeJoiners.push(j);
+    try { await j.connect(); } catch {}
   }
 
-  isProcessing = false;
-  log(`参加完了！${workers.length}アカウントがサーバーに参加中`, 'success');
-};
+  document.getElementById("joinBtn").disabled = false;
+  document.getElementById("joinBtn").textContent = "VCに参加";
+  showNotif(`${tokens.length}アカウントで参加を試みました`);
+}
 
-// 退出ボタン
-document.getElementById('leaveBtn').onclick = async () => {
-  if (workers.length === 0) {
-    log('退出対象のアカウントがありません', 'info');
-    return;
-  }
-  if (isProcessing) {
-    log('処理中です...', 'info');
-    return;
-  }
-
-  isProcessing = true;
-  log(`退出処理開始... (${workers.length}アカウント)`, 'info');
-
-  for (const w of workers) {
-    await leave(w.token, w.guildId);
-    await new Promise(r => setTimeout(r, 2000));
-  }
-
-  workers = [];
-  isProcessing = false;
-  log('全員退出完了', 'success');
-};
-
-// 起動時はログ一切なし（真っ白）
+function stopRaid() {
+  activeJoiners.forEach(j => j.disconnect());
+  activeJoiners = [];
+  showNotif("全員退出しました");
+}
 </script>
 </body>
 </html>
