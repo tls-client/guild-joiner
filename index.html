@@ -100,17 +100,6 @@
   button.stop { background: linear-gradient(135deg, #f04747, #8b1a1a); margin-top: 12px; display: none; }
   button.stop:hover { box-shadow: 0 15px 35px rgba(240,71,71,0.6); }
 
-  .status {
-    text-align: center;
-    margin: 20px 0;
-    padding: 14px;
-    background: rgba(100,214,255,0.1);
-    border-radius: 12px;
-    font-weight: 600;
-    color: #64d6ff;
-    text-shadow: 0 0 10px rgba(100,214,255,0.5);
-  }
-
   #log {
     margin-top: 24px;
     padding: 16px;
@@ -128,7 +117,6 @@
   .error   { color: #ff6b6b; }
   .info    { color: #a0d8ff; }
 
-  /* 上スワイプでリフレッシュ */
   .pull-to-refresh {
     position: absolute;
     top: -60px;
@@ -148,104 +136,62 @@
     pointer-events: none;
     z-index: 10;
   }
-  .pull-to-refresh.active {
-    opacity: 1;
-    top: 20px;
-  }
-  .pull-to-refresh.spinning::before {
-    content: "";
-    animation: spin 1s linear infinite;
-  }
-  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+  .pull-to-refresh.active { opacity: 1; top: 20px; }
+  .pull-to-refresh.spinning { animation: spin 1s linear infinite; }
+  @keyframes spin { from { transform: translateX(-50%) rotate(0deg); } to { transform: translateX(-50%) rotate(360deg); } }
 </style>
 </head>
 <body>
 <div class="container" id="scroller">
-  <div class="pull-to-refresh" id="refreshIndicator">↻</div>
+  <div class="pull-to-refresh" id="refreshIndicator">Refresh</div>
   <div class="card">
     <h2>Guild Joiner</h2>
+
     <label>トークン（改行で複数可）</label>
-    <textarea id="tokens" placeholder="tokenを貼り付けてください"></textarea>
+    <textarea id="tokens" placeholder="自分のトークンを1行ずつ貼り付け"></textarea>
 
     <label>招待コード</label>
-    <input type="text" id="invite" placeholder="discord.gg/abc">
+    <input type="text" id="invite" placeholder="discord.gg/abc123 または abc123">
 
     <label>ニックネーム（任意）</label>
-    <input type="text" id="nickname" placeholder="例：User">
+    <input type="text" id="nickname" placeholder="例：TestUser">
 
     <label>自己紹介（任意）</label>
-    <textarea id="bio" rows="2" placeholder="例：テスト"></textarea>
+    <textarea id="bio" rows="2" placeholder="例：負荷テスト用"></textarea>
 
-    <label>遅延（ms）</label>
-    <input type="number" id="delay" value="1" min="3000">
+    <label>遅延（ms）※最低6000推奨</label>
+    <input type="number" id="delay" value="8000" min="3000">
 
     <button class="primary" id="startBtn">参加開始</button>
     <button class="primary stop" id="stopBtn">全員退出</button>
 
-    <div id="log">ログがここに表示されます...</div>
+    <div id="log">ツール起動完了。準備OKです！</div>
   </div>
 </div>
 
 <script>
-const scroller = document.getElementById('scroller');
-const refreshIndicator = document.getElementById('refreshIndicator');
-let startY = 0;
-let isPulling = false;
-
-// 上スワイプでリフレッシュ
-scroller.addEventListener('touchstart', e => {
-  startY = e.touches[0].clientY;
-  if (scroller.scrollTop === 0) isPulling = true;
-});
-
-scroller.addEventListener('touchmove', e => {
-  if (!isPulling) return;
-  const y = e.touches[0].clientY;
-  const diff = y - startY;
-  if (diff > 100) {
-    refreshIndicator.classList.add('active');
-  }
-});
-
-scroller.addEventListener('touchend', e => {
-  if (isPulling && refreshIndicator.classList.contains('active')) {
-    refreshIndicator.classList.add('spinning');
-    refreshIndicator.textContent = "↻";
-    setTimeout(() => {
-      location.reload();
-    }, 800);
-  }
-  isPulling = false;
-  refreshIndicator.classList.remove('active', 'spinning');
-});
-
-// 左右スワイプでログ履歴（簡易版）
-let swipeStartX = 0;
-scroller.addEventListener('touchstart', e => swipeStartX = e.touches[0].clientX);
-scroller.addEventListener('touchend', e => {
-  const diff = e.changedTouches[0].clientX - swipeStartX;
-  if (Math.abs(diff) > 100) {
-    if (diff > 0) alert("← 過去のログ（実装予定）");
-    else alert("次へ →");
-  }
-});
-
-// 以降は前回と同じ完全動作コード
+// === 必須変数 ===
 const logEl = document.getElementById('log');
-const statusEl = document.getElementById('status');
+const startBtn = document.getElementById('startBtn');
+const stopBtn = document.getElementById('stopBtn');
 let running = false;
 let workers = [];
 
+// === ログ出力（確実に表示）===
 function log(msg, type = 'info') {
   const time = new Date().toLocaleTimeString('ja-JP');
-  logEl.innerHTML += `<div class="${type}">[${time}] ${msg}</div>`;
+  const div = document.createElement('div');
+  div.className = type;
+  div.textContent = `[${time}] ${msg}`;
+  logEl.appendChild(div);
   logEl.scrollTop = logEl.scrollHeight;
+  console.log(`[LOG] ${msg}`); // デバッグ用
 }
 
-// （join / leave 関数は前回と同じ完全版）
-async function join(token, invite, nick, bio) {
+// === 参加処理 ===
+async function join(token, code, nick, bio) {
   try {
-    const code = invite.trim().split('/').pop();
+    log(`参加試行中... (コード: ${code})`, 'info');
     const res = await fetch(`https://discord.com/api/v9/invites/${code}`, {
       method: "POST",
       headers: {
@@ -255,12 +201,29 @@ async function join(token, invite, nick, bio) {
       },
       body: "{}"
     });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+    if (!res.ok) {
+      const err = await res.text();
+      throw new Error(`HTTP ${res.status} - ${err.substring(0, 100)}`);
+    }
+
     const data = await res.json();
-    log(`参加成功 → ${data.guild.name}`, 'success');
-    // ニックネーム・自己紹介も同様
-    if (nick) await fetch(`https://discord.com/api/v9/guilds/${data.guild.id}/members/@me`, {method: "PATCH", headers: {"Authorization": token.trim(), "Content-Type": "application/json"}, body: JSON.stringify({nick})});
-    if (bio) await fetch("https://discord.com/api/v9/users/@me/settings", {method: "PATCH", headers: {"Authorization": token.trim(), "Content-Type": "application/json"}, body: JSON.stringify({bio})});
+    log(`参加成功 → ${data.guild.name} (${data.guild.id})`, 'success');
+
+    if (nick) {
+      await fetch(`https://discord.com/api/v9/guilds/${data.guild.id}/members/@me`, {
+        method: "PATCH",
+        headers: { "Authorization": token.trim(), "Content-Type": "application/json" },
+        body: JSON.stringify({ nick })
+      });
+    }
+    if (bio) {
+      await fetch("https://discord.com/api/v9/users/@me/settings", {
+        method: "PATCH",
+        headers: { "Authorization": token.trim(), "Content-Type": "application/json" },
+        body: JSON.stringify({ bio })
+      });
+    }
     return data.guild.id;
   } catch (e) {
     log(`参加失敗: ${e.message}`, 'error');
@@ -268,16 +231,96 @@ async function join(token, invite, nick, bio) {
   }
 }
 
+// === 退出処理 ===
 async function leave(token, guildId) {
   try {
-    await fetch(`https://discord.com/api/v9/users/@me/guilds/${guildId}`, {method: "DELETE", headers: {"Authorization": token.trim()}});
-    log(`退出完了`, 'info');
-  } catch (e) { log(`退出失敗: ${e.message}`, 'error'); }
+    await fetch(`https://discord.com/api/v9/users/@me/guilds/${guildId}`, {
+      method: "DELETE",
+      headers: { "Authorization": token.trim() }
+    });
+    log('退出成功', 'success');
+  } catch (e) {
+    log(`退出失敗: ${e.message}`, 'error');
+  }
 }
 
-// 参加開始・退出ボタンも前回と同じ
-document.getElementById('startBtn').onclick = async () => { /* 前回と同じコード */ };
-document.getElementById('stopBtn').onclick = async () => { /* 前回と同じコード */ };
+// === 参加開始ボタン ===
+startBtn.onclick = async () => {
+  if (running) return;
+  running = true;
+  startBtn.style.display = 'none';
+  stopBtn.style.display = 'block';
+  log('参加処理開始...', 'info');
+
+  const tokens = document.getElementById('tokens').value.trim().split('\n').filter(t => t.trim());
+  const rawInvite = document.getElementById('invite').value.trim();
+  const code = rawInvite.includes('/') ? rawInvite.split('/').pop() : rawInvite;
+  const nick = document.getElementById('nickname').value.trim();
+  const bio = document.getElementById('bio').value.trim();
+  const delay = parseInt(document.getElementById('delay').value) || 8000;
+
+  if (!tokens.length || !code) {
+    log('エラー: トークンまたは招待コードが空です', 'error');
+    running = false;
+    startBtn.style.display = 'block';
+    stopBtn.style.display = 'none';
+    return;
+  }
+
+  workers = [];
+  for (let i = 0; i < tokens.length; i++) {
+    if (!running) break;
+    log(`処理中... [${i+1}/${tokens.length}]`, 'info');
+    const gid = await join(tokens[i], code, nick || null, bio || null);
+    if (gid) workers.push({ token: tokens[i].trim(), guildId: gid });
+    await new Promise(r => setTimeout(r, delay + Math.random() * 3000));
+  }
+  log(`参加完了！${workers.length}アカウントがサーバーにいます`, 'success');
+};
+
+// === 退出ボタン ===
+stopBtn.onclick = async () => {
+  running = false;
+  log('退出処理開始...', 'info');
+  startBtn.style.display = 'block';
+  stopBtn.style.display = 'none';
+
+  for (const w of workers) {
+    await leave(w.token, w.guildId);
+    await new Promise(r => setTimeout(r, 1500));
+  }
+  workers = [];
+  log('全アカウント退出完了', 'success');
+};
+
+// === 上スワイプでリフレッシュ ===
+const scroller = document.getElementById('scroller');
+const refreshIndicator = document.getElementById('refreshIndicator');
+let startY = 0, isPulling = false;
+
+scroller.addEventListener('touchstart', e => {
+  startY = e.touches[0].clientY;
+  if (scroller.scrollTop === 0) isPulling = true;
+}, { passive: true });
+
+scれる.addEventListener('touchmove', e => {
+  if (!isPulling) return;
+  const diff = e.touches[0].clientY - startY;
+  if (diff > 120) refreshIndicator.classList.add('active');
+}, { passive: true });
+
+scroller.addEventListener('touchend', () => {
+  if (isPulling && refreshIndicator.classList.contains('active')) {
+    refreshIndicator.classList.add('spinning');
+    log('リフレッシュ中...', 'info');
+    setTimeout(() => location.reload(), 1000);
+  }
+  isPulling = false;
+  refreshIndicator.classList.remove('active', 'spinning');
+});
+
+// 起動ログ
+log('Guild Joiner 起動完了！準備OKです', 'success');
 </script>
 </body>
 </html>
