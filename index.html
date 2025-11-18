@@ -163,23 +163,21 @@
 <div class="container" id="scroller">
   <div class="pull-to-refresh" id="refreshIndicator">↻</div>
   <div class="card">
-    <h2>Guild Joiner - Leaver</h2>
-    <div class="status" id="status">待機中 — 自分のサーバーでの研究・テスト専用</div>
-
-    <label>トークン（1行に1つ）</label>
-    <textarea id="tokens" placeholder="自分のアカウントのトークンのみ貼り付け"></textarea>
+    <h2>Guild Joiner</h2>
+    <label>トークン（改行で複数可）</label>
+    <textarea id="tokens" placeholder="tokenを貼り付けてください"></textarea>
 
     <label>招待コード</label>
-    <input type="text" id="invite" placeholder="abc123 または discord.gg/abc123">
+    <input type="text" id="invite" placeholder="discord.gg/abc">
 
-    <label>参加時ニックネーム（任意）</label>
-    <input type="text" id="nickname" placeholder="例：TestUser_01">
+    <label>ニックネーム（任意）</label>
+    <input type="text" id="nickname" placeholder="例：User">
 
-    <label>参加時自己紹介（任意）</label>
-    <textarea id="bio" rows="2" placeholder="例：負荷テスト用アカウントです"></textarea>
+    <label>自己紹介（任意）</label>
+    <textarea id="bio" rows="2" placeholder="例：テスト"></textarea>
 
-    <label>遅延（ms）推奨 6000〜12000</label>
-    <input type="number" id="delay" value="8000" min="3000">
+    <label>遅延（ms）</label>
+    <input type="number" id="delay" value="1" min="3000">
 
     <button class="primary" id="startBtn">参加開始</button>
     <button class="primary stop" id="stopBtn">全員退出</button>
