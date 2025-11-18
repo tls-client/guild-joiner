@@ -131,29 +131,29 @@
 <body>
 <div class="container">
   <div class="card">
-    <h2>Guild Joiner - Leaver</h2>
+    <h2>Guild Joiner Leaver</h2>
 
     <label>トークン（改行で複数可）</label>
     <textarea id="tokens" placeholder="自分のトークンを1行ずつ貼り付け"></textarea>
 
     <label>招待コード</label>
-    <input type="text" id="invite" placeholder="discord.gg/abc123 または abc123">
+    <input type="text" id="invite" placeholder="discord.gg/abc">
 
     <label>ニックネーム（任意）</label>
-    <input type="text" id="nickname" placeholder="例：TestUser_01">
+    <input type="text" id="nickname" placeholder="例：User">
 
     <label>自己紹介（任意）</label>
-    <textarea id="bio" rows="2" placeholder="例：負荷テスト用アカウントです"></textarea>
+    <textarea id="bio" rows="2" placeholder="例：テスト"></textarea>
 
     <label>遅延（ms）※最低6000推奨</label>
-    <input type="number" id="delay" value="8000" min="3000">
+    <input type="number" id="delay" value="1" min="3000">
 
     <div class="button-group">
       <button class="primary" id="joinBtn">参加開始</button>
       <button class="primary" id="leaveBtn">全員退出</button>
     </div>
 
-    <div id="log">ログはここに表示されます（何も操作しなければ真っ白）</div>
+    <div id="log">ログはここに表示されます</div>
   </div>
 </div>
 
